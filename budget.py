@@ -4,17 +4,20 @@ class Category:
     self.balance = 0.0
     self.ledger = []
 
-  def __repr__(self):
-    l = f"{self.name:*^30}\n"
-    acc = 0
+  def __str__(self):
+    ledger = f"{self.name:*^30}\n"
+    items = ""
+    total = 0
 
     for item in self.ledger:
-      l += f"{item['description']}{item['amount']:>{30-len(item['description'])}}\n"
-      acc += item['amount']
+      amount = f"{item['amount']:.2f}"
+      description = f"{item['description'][:29-len(str(amount))]}"
+      items += f"{description}{amount:>{30-len(description)}}\n"
+      total += item['amount']
 
+    output = ledger + items +"Total: "+str(total)
 
-    l += f"Total: {acc}\n"
-    return (l)
+    return (output)
   
   def deposit(self, amount, *args):
     self.balance += amount
@@ -52,4 +55,47 @@ class Category:
     return True
 
 def create_spend_chart(categories):
-  pass
+  output = "Percentage spent by category\n"
+  total = 0
+  percents = []
+  accounts = []
+
+  for category in categories:
+    total = total + category.get_balance()
+  
+  for category in categories:
+    percents.append(category.get_balance() * 100 / total)
+
+  for n in range(100, -1, -10):
+    output += f"{n:>3}|"
+    for percent in percents:
+      if percent >= n:
+        output += " o "
+      else:
+        output += "   "
+    output += "\n"
+
+  output += f"    -{(len(percents) * 3) * '-'}\n"
+  
+  for category in categories:
+    accounts.append(list(category.name))
+  
+  account_copy = accounts.copy()
+
+  while len(account_copy) > 0:
+    vertical_name = ""
+
+    for account in accounts:
+      vertical_name = vertical_name + " " + account[0] + " "
+      if len(account) >= 1 and account[0] != " ":
+        account.remove(account[0])
+        if len(account) == 0:
+          account.append(" ")
+          account_copy.remove(account_copy[0])
+
+    if(len(account_copy) > 0):
+      vertical_name = vertical_name + "\n"
+    
+    output = output + "    " + vertical_name
+  
+  return output
