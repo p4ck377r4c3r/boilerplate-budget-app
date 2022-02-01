@@ -15,7 +15,7 @@ class Category:
       items += f"{description}{amount:>{30-len(description)}}\n"
       total += item['amount']
 
-    output = ledger + items +"Total: "+str(total)
+    output = ledger + items +f"Total: {total:.2f}"
 
     return (output)
   
@@ -57,25 +57,31 @@ class Category:
 def create_spend_chart(categories):
   output = "Percentage spent by category\n"
   total = 0
-  percents = []
+  percents = {}
   accounts = []
 
   for category in categories:
-    total = total + category.get_balance()
+    percents[category.name] = 0
+    for deduction in  category.ledger:
+      if deduction['amount'] < 0:
+        percents[category.name] += deduction['amount']
+    
+    percents[category.name] = -percents[category.name]
+    total += percents[category.name]
   
-  for category in categories:
-    percents.append(category.get_balance() * 100 / total)
+  for percent in percents:
+    percents[percent] = int(percents[percent] * 100 / total)
 
   for n in range(100, -1, -10):
-    output += f"{n:>3}|"
+    output += f"{n:>3}| "
     for percent in percents:
-      if percent >= n:
-        output += " o "
+      if percents[percent] >= n:
+        output += "o  "
       else:
         output += "   "
     output += "\n"
 
-  output += f"    -{(len(percents) * 3) * '-'}\n"
+  output += " " * 4 + "-" * (len(percents) * 3 + 1) + '\n'
   
   for category in categories:
     accounts.append(list(category.name))
@@ -94,8 +100,10 @@ def create_spend_chart(categories):
           account_copy.remove(account_copy[0])
 
     if(len(account_copy) > 0):
-      vertical_name = vertical_name + "\n"
+      vertical_name = vertical_name + " \n"
+    else:
+      vertical_name = vertical_name + " "
     
     output = output + "    " + vertical_name
-  
+
   return output
